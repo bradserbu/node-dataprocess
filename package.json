@@ -1,9 +1,18 @@
 {
   "name": "dataprocess",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.1.1",
+  "description": "Data processing framework for NodeJS.",
   "main": "index.js",
   "scripts": {},
-  "author": "",
-  "license": "ISC"
+  "author": "Brad Serbu <bradserbu@bradserbu.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "highland": "^3.0.0-beta.2",
+    "measured": "^1.1.0",
+    "microtime": "^2.1.1",
+    "q": "^1.4.1",
+    "throat": "^3.0.0",
+    "underscore": "^1.8.3"
+  }
 }
