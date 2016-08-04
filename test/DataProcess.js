@@ -47,17 +47,19 @@ function isThirty(user) {
 }
 
 // ** Main program
-const process = Process('greet-users')
+const process = DataProcess('greet-users')
     .map('user', User)
     .delay(() => randomInt(100, 5000))
     .setProperty('age', user => AGES[user.username])
     .setProperty('age', 'age-to-number', user => Number(user.age))
     .filter('age-is-integer', user => Number.isInteger(user.age))
-    .filter('thirty-year-olds', user => isThirty(user))
+    .reject('thirty-year-olds', user => isThirty(user))
     .setProperty('greeting', user => `Hello, ${user.username}!`)
     .map('select-greeting', user => user.greeting)
     .stringify()
     .exec('say-hello', greeting => console.log(greeting))
     .complete();
 
-process.run(USERS);
+process.run(USERS, {
+    concurrency: 1
+});
