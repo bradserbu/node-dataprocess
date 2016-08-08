@@ -62,4 +62,6 @@ const process = DataProcess('greet-users')
 
 process.run(USERS, {
     concurrency: 1
-});
+})
+    .then(() => console.log('STATS', process.stats()))
+    .catch(err => console.error(err));
