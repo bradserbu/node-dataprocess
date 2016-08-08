@@ -47,7 +47,7 @@ function isThirty(user) {
 }
 
 // ** Main program
-const process = DataProcess('greet-users')
+DataProcess('greet-users')
     .map('user', User)
     .delay(() => randomInt(100, 5000))
     .setProperty('age', user => AGES[user.username])
@@ -58,10 +58,9 @@ const process = DataProcess('greet-users')
     .map('select-greeting', user => user.greeting)
     .stringify()
     .exec('say-hello', greeting => console.log(greeting))
-    .complete();
-
-process.run(USERS, {
-    concurrency: 1
-})
-    .then(() => console.log('STATS', process.stats()))
-    .catch(err => console.error(err));
+    .complete()
+    .run(USERS, {
+        concurrency: 1
+    })
+    .catch(err => console.error(err))
+    .done(process => console.log('PROCESS_COMPLETED', process.stats()));
