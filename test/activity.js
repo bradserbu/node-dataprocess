@@ -4,7 +4,9 @@
 // ** Dependencies
 const Activity = require('..').Activity;
 
-const say_hello = Activity('say-hello', name => console.log(`Hello, ${name}!`));
+const say_hello = Activity('say-hello', name => console.log(`Hello, ${name}!`), {
+    logArguments: true
+});
 
 // Run an instance of the say hello activity and then log the stats;
 say_hello

@@ -62,5 +62,5 @@ DataProcess('greet-users')
     .run(USERS, {
         concurrency: 1
     })
-    .catch(err => console.error(err));
-    // .done(process => console.log('PROCESS_COMPLETED', process.stats()));
+    .catch(err => console.error(err))
+    .done(process => console.log('PROCESS_COMPLETED', process.stats()));
