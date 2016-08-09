@@ -2,12 +2,11 @@
 'use strict';
 
 // ** Dependencies
-const activity = require('..').Activity;
+const Activity = require('..').Activity;
 
-/**
- * Say hello to a user
- */
-const helloworld = activity('helloworld', name => console.log(`Hello, ${name}!`));
+const say_hello = Activity('say-hello', name => console.log(`Hello, ${name}!`));
 
-// ** Exports
-helloworld('Brad Serbu');
+// Run an instance of the say hello activity and then log the stats;
+say_hello
+    .run('Brad Serbu')
+    .then(() => console.log('STATS', say_hello.stats()));
