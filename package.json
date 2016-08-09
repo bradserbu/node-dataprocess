@@ -3,7 +3,9 @@
   "version": "1.1.12",
   "description": "Data processing framework for NodeJS.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "./test/activity.js && ./test/dataprocess.js"
+  },
   "author": "Brad Serbu <bradserbu@bradserbu.com>",
   "license": "Apache-2.0",
   "repository": {
