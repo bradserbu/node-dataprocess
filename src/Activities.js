@@ -2,13 +2,15 @@
 
 // ** Dependencies
 const _ = require('underscore');
-const Activity = require('Activity');
+const util = require('util');
+const Activity = require('./Activity');
 const EventEmitter = require('events').EventEmitter;
 
-class Activities extends EventEmitter() {
+class Activities extends EventEmitter {
     constructor() {
+        super();
+
         this.activities = {}; // Keep track of all the activities created by the application
-        this.events = new EventEmitter();
     }
 
     createActivity(name, action, options) {
