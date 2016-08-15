@@ -1,5 +1,6 @@
 module.exports = {
+    Activities: require('./src/Activities'),
     Activity: require('./src/Activity'),
     DataProcess: require('./src/DataProcess'),
-    healthcheck: require('./src/healthcheck')
+    HealthCheck: require('./src/HealthCheck')
 };

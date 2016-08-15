@@ -5,7 +5,7 @@ const DEFAULT_PORT = 3000;
 // ** Dependencies
 const http = require('http');
 const util = require('util');
-const Activity = require('dataprocess').Activity;
+const Activity = require('./Activity');
 
 function createServer(port, requestHandler) {
 
