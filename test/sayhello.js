@@ -3,7 +3,7 @@
 
 // ** Dependencies
 const Q = require('q');
-const Activity = require('..').Activity;
+const activities = require('../src/activities');
 
 function sayHello(name) {
     const greeting = `Hello, ${name}!`;
@@ -12,7 +12,7 @@ function sayHello(name) {
     return greeting;
 }
 
-const say_hello = Activity('say-hello', sayHello, {
+const say_hello = activities('say-hello', sayHello, {
     logArguments: true
 })
     .on('error', (err, args) => console.error('ERROR:', {arguments: args}, err))

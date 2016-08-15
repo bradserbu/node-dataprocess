@@ -5,7 +5,7 @@ const DEFAULT_PORT = 3000;
 // ** Dependencies
 const http = require('http');
 const util = require('util');
-const Activity = require('../lib/Activity');
+const Activity = require('dataprocess').Activity;
 
 function createServer(port, requestHandler) {
 
@@ -45,6 +45,7 @@ function createHealthCheck(port, getStatus) {
 
     const get_status = Activity(`healthcheck:${port}:get-status`, getStatus);
 
+    // REST endpoint
     const server = createServer(port, (req, res) => {
         return get_status
             .run()
