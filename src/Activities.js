@@ -2,7 +2,7 @@
 
 // ** Dependencies
 const _ = require('underscore');
-const Activity = require('../lib/Activity');
+const Activity = require('Activity');
 const EventEmitter = require('events').EventEmitter;
 
 class Activities extends EventEmitter() {
