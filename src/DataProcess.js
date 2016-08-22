@@ -82,7 +82,7 @@ class DataProcess extends EventEmitter {
 
             // options:concurrency - Use activity setting or maxConcurrency, whichever is greater
             const concurrency = options.concurrency
-                ? options.concurrency <= maxConcurrency ? options.concurrency : maxConcurrency
+                ? options.concurrency
                 : maxConcurrency;
 
             switch (type.toLowerCase()) {
