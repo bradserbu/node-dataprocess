@@ -59,8 +59,6 @@ DataProcess('greet-users')
     .stringify()
     .exec('say-hello', greeting => console.log(greeting))
     .complete()
-    .run(USERS, {
-        concurrency: 1
-    })
+    .run(USERS)
     .catch(err => console.error(err))
     .done(process => console.log('PROCESS_COMPLETED', process.stats()));
