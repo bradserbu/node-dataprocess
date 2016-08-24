@@ -1,5 +1,7 @@
 'use strict';
 
+const DEFAULT_CONCURRENCY = 100;
+
 // ** Dependencies
 const $ = require('highland');
 const Q = require('q');
@@ -67,7 +69,7 @@ class DataProcess extends EventEmitter {
 
         // Cap the number of instances for all activities
         // Example: concurrency=1 says only 1 instance of an activity at a time.
-        const maxConcurrency = options.concurrency || 0;
+        const maxConcurrency = options.concurrency || DEFAULT_CONCURRENCY;
 
         // Create a stream that represents the results
         let results = $.flatten(source);
