@@ -30,22 +30,6 @@ function complete(value) {
     return Q.when(value);
 }
 
-function pipeline(args) {
-    return $.pipeline.apply(null, args);
-}
-
-function isStream(obj) {
-    return obj && util.isFunction(obj.pipe);
-}
-
-/**
- * Function to check if an object is a promise or not
- * @type {boolean}
- */
-function isPromise(obj) {
-    return typeof obj.then == 'function' && typeof obj.catch == 'function';
-}
-
 /**
  * Data Process Object
  */
