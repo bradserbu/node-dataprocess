@@ -6,7 +6,6 @@ const _ = require('underscore');
 const util = require('util');
 const debug = require('debug');
 const now = require('microtime').now;
-const throat = require('throat');
 const measured = require('measured');
 const EventEmitter = require('events').EventEmitter;
 
@@ -58,9 +57,7 @@ class Activity extends EventEmitter {
         this.name = name;
         this.options = options;
 
-        this.action = (options.concurrency > 0)
-            ? throat(action, options.concurrency)
-            : action;
+        this.action = action;
 
         // Generator for instance ids
         this.nextId = options.nextId || default_next_id();
@@ -136,6 +133,15 @@ class Activity extends EventEmitter {
         // Execute the action
         try {
             self._stats.requests.mark();
+
+            if (util.isNullOrUndefined(this.action)) {
+                return FAIL(Error(this.name + ': The action is "undefined" or "null."', 'INVALID_ACTION'));
+            }
+
+            if (!util.isFunction(this.action.apply)) {
+                return FAIL(Error(this.name + ': The action is not a function.', 'INVALID_ACTION'));
+            }
+
             return COMPLETE(this.action.apply(this, args));
         } catch (err) {
             FAIL(err);
