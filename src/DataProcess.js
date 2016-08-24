@@ -1,6 +1,6 @@
 'use strict';
 
-const DEFAULT_CONCURRENCY = 100;
+const DEFAULT_CONCURRENCY = 200;
 
 // ** Dependencies
 const $ = require('highland');
