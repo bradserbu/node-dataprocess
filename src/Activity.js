@@ -1,7 +1,7 @@
 'use strict';
 
 // ** Dependencies
-const Q = require('q');
+const Q = require('bluebird-q');
 const _ = require('underscore');
 const util = require('util');
 const debug = require('debug');

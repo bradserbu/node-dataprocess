@@ -4,7 +4,7 @@ const DEFAULT_CONCURRENCY = 1;
 
 // ** Dependencies
 const $ = require('highland');
-const Q = require('q');
+const Q = require('bluebird-q');
 const _ = require('underscore');
 const util = require('util');
 const EventEmitter = require('events').EventEmitter;

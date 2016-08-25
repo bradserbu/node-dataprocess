@@ -11,11 +11,11 @@
     "url": "https://github.com/geofeedia/node-dataprocess.git"
   },
   "dependencies": {
+    "bluebird-q": "^2.1.0",
     "debug": "^2.2.0",
     "highland": "^3.0.0-beta.2",
     "measured": "^1.1.0",
     "microtime": "^2.1.1",
-    "q": "^1.4.1",
     "throat": "^3.0.0",
     "underscore": "^1.8.3"
   }
