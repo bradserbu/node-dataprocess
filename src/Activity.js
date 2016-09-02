@@ -1,7 +1,7 @@
 'use strict';
 
 // ** Dependencies
-const Q = require('bluebird-q');
+const Promise = require('bluebird');
 const _ = require('underscore');
 const util = require('util');
 const debug = require('debug');
@@ -126,7 +126,7 @@ class Activity extends EventEmitter {
                 self._stats.responses.update(elapsed_ms);
                 self.emit('response', result, args);
 
-                return Q.resolve(result);
+                return Promise.resolve(result);
             }
         };
 

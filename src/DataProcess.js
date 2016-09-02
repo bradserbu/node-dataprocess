@@ -4,7 +4,7 @@ const DEFAULT_CONCURRENCY = 1;
 
 // ** Dependencies
 const $ = require('highland');
-const Q = require('bluebird-q');
+const Promise = require('bluebird');
 const _ = require('underscore');
 const throat = require('throat');
 const util = require('util');
@@ -21,7 +21,7 @@ function complete(value) {
 
     // Return a promise that completes when the stream completes or produces an error.
     if ($.isStream(value)) {
-        return Q.Promise((resolve, reject) =>
+        return new Promise((resolve, reject) =>
             value
                 .stopOnError(err => reject(err))
                 .done(() => resolve()));

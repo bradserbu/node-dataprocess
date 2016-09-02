@@ -2,7 +2,6 @@
 'use strict';
 
 // ** Dependencies
-const Q = require('bluebird-q');
 const activities = require('../src/activities');
 
 function sayHello(name) {
