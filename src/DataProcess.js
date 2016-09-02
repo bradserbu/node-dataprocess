@@ -6,6 +6,7 @@ const DEFAULT_CONCURRENCY = 1;
 const $ = require('highland');
 const Q = require('bluebird-q');
 const _ = require('underscore');
+const throat = require('throat');
 const util = require('util');
 const EventEmitter = require('events').EventEmitter;
 const Activity = require('./Activity');
@@ -47,6 +48,70 @@ function isPromise(obj) {
 }
 
 /**
+ * Use the dataprocess as a pipeline running a maximum of N number of activities
+ * where N is the max number of concurrent operations across the activities.
+ * @param input
+ * @param activities
+ */
+function oneAtATime(input, activities, concurrency) {
+
+    const process = [];
+
+    // Apply each activity to the results stream
+    for (let lcv = 0; lcv < activities.length; lcv++) {
+        const activity = activities[lcv];
+        // Apply the activity to each record
+        const type = activity.type;
+        const action = activity.action;
+
+        switch (type.toLowerCase()) {
+            case 'map':
+                process.push($.flatMap(record => $(action(record))));
+                break;
+            case 'filter':
+                process.push($.flatMap(record => $(action(record))));
+                process.push($.filter(t => t[1]));
+                process.push($.map(t => t[0]));
+                break;
+            case 'flatten':
+                process.push($.flatten());
+                break;
+            case 'completed':
+                throw Error('The "completed" activity is not supported for one at a time processing.', 'NOT_SUPPORTED');
+                // results = complete(results)
+                //     .then(() => this); // Return the process as the results of complete
+                break;
+            case 'compact':
+                process.push($.compact());
+                break;
+            case 'errors':
+                throw Error('The "errors" activity is not supported for one at a time processing.', 'NOT_SUPPORTED');
+                // results = results
+                //     .errors(err => action(err));
+                break;
+            default:
+                throw Error(`The activity type '${type}' is not supported.`, 'NOT_SUPPORTED');
+                break;
+        }
+    }
+
+    // Function to process an individual record
+    // const processRecord = record => {
+    //     console.log('PROCESS_RECORD', record);
+    //     return $(process.reduce(Q.when, Q(record)));
+    // };
+
+    if (concurrency)
+        return input
+            .map(record => $([record]).through(pipeline(process)))
+            .mergeWithLimit(concurrency);
+    else
+        return input
+            .map(record => $([record]).through(pipeline(process)))
+            .merge();
+}
+
+/**
  * Data Process Object
  */
 class DataProcess extends EventEmitter {
@@ -73,6 +138,18 @@ class DataProcess extends EventEmitter {
 
         // Create a stream that represents the results
         let results = $.flatten(source);
+
+        if (options.pipeline) {
+            console.log('PIPELINE=true');
+            const ret = oneAtATime(results, this.activities, maxConcurrency);
+
+            ret.complete = () => complete(ret)
+                .then(() => this);
+
+            // Transform the stream into a Promise that fullfulls on completion or error.
+            // ret.complete = () => complete(results);
+            return ret;
+        }
 
         // Apply each activity to the results stream
         for (let lcv = 0; lcv < this.activities.length; lcv++) {
@@ -137,7 +214,12 @@ class DataProcess extends EventEmitter {
         }
 
         // Return the results stream
-        return results;
+        const ret = results;
+
+        // Transform the stream into a Promise that fullfulls on completion or error.
+        ret.complete = () => complete(results);
+
+        return ret;
     }
 
     tap(name, action, options) {
