@@ -69,7 +69,8 @@ function oneAtATime(input, activities, concurrency) {
                 process.push($.flatMap(record => $(action(record))));
                 break;
             case 'filter':
-                process.push($.flatMap(record => $(action(record))));
+                process.push($.flatMap(record => $(action(record)
+                    .then(result => [record, result]))));
                 process.push($.filter(t => t[1]));
                 process.push($.map(t => t[0]));
                 break;
@@ -140,76 +141,70 @@ class DataProcess extends EventEmitter {
         let results = $.flatten(source);
 
         if (options.pipeline) {
-            console.log('PIPELINE=true');
-            const ret = oneAtATime(results, this.activities, maxConcurrency);
+            // *** Treat the entire Activity ***
+            results = oneAtATime(results, this.activities, maxConcurrency);
+        } else {
+            // *** STREAMING MODE ***
+            // Apply each activity to the results stream as independent steps
+            for (let lcv = 0; lcv < this.activities.length; lcv++) {
+                const activity = this.activities[lcv];
+                // Apply the activity to each record
+                const type = activity.type;
+                const action = activity.action;
+                const options = activity.options || {};
 
-            ret.complete = () => complete(ret)
-                .then(() => this);
+                // options:concurrency - Use activity setting or maxConcurrency, whichever is greater
+                const concurrency = options.concurrency
+                    ? options.concurrency
+                    : maxConcurrency;
 
-            // Transform the stream into a Promise that fullfulls on completion or error.
-            // ret.complete = () => complete(results);
-            return ret;
-        }
+                switch (type.toLowerCase()) {
+                    case 'map':
+                        // Run the activity for each record
+                        results = results
+                            .map(record => $(action(record)));
 
-        // Apply each activity to the results stream
-        for (let lcv = 0; lcv < this.activities.length; lcv++) {
-            const activity = this.activities[lcv];
-            // Apply the activity to each record
-            const type = activity.type;
-            const action = activity.action;
-            const options = activity.options || {};
+                        // Merge the results of the promises together
+                        results = (concurrency > 0)
+                            ? results.mergeWithLimit(concurrency)
+                            : results.merge();
+                        break;
+                    case 'filter':
+                        // Run the activity for each of the records
+                        results = results
+                            .map(record =>
+                                $(action(record)
+                                    .then(result => [record, result]))
+                            );
 
-            // options:concurrency - Use activity setting or maxConcurrency, whichever is greater
-            const concurrency = options.concurrency
-                ? options.concurrency
-                : maxConcurrency;
+                        // Merge the results of the promises together
+                        results = (concurrency > 0)
+                            ? results.mergeWithLimit(concurrency)
+                            : results.merge();
 
-            switch (type.toLowerCase()) {
-                case 'map':
-                    // Run the activity for each record
-                    results = results
-                        .map(record => $(action(record)));
-
-                    // Merge the results of the promises together
-                    results = (concurrency > 0)
-                        ? results.mergeWithLimit(concurrency)
-                        : results.merge();
-                    break;
-                case 'filter':
-                    // Run the activity for each of the records
-                    results = results
-                        .map(record =>
-                            $(action(record)
-                                .then(result => [record, result]))
-                        );
-
-                    // Merge the results of the promises together
-                    results = (concurrency > 0)
-                        ? results.mergeWithLimit(concurrency)
-                        : results.merge();
-
-                    // Apply the filter and select the record
-                    results = results
-                        .filter(t => t[1])
-                        .map(t => t[0]);
-                    break;
-                case 'flatten':
-                    results = $.flatten(results);
-                    break;
-                case 'completed':
-                    results = complete(results)
-                        .then(() => this); // Return the process as the results of complete
-                    break;
-                case 'compact':
-                    results = results.compact();
-                    break;
-                case 'errors':
-                    results = results
-                        .errors(err => action(err));
-                    break;
-                default:
-                    throw Error(`The activity type '${type}' is not supported.`, 'NOT_SUPPORTED');
-                    break;
+                        // Apply the filter and select the record
+                        results = results
+                            .filter(t => t[1])
+                            .map(t => t[0]);
+                        break;
+                    case 'flatten':
+                        results = $.flatten(results);
+                        break;
+                    case 'completed':
+                        results = complete(results)
+                            .then(() => this); // Return the process as the results of complete
+                        break;
+                    case 'compact':
+                        results = results.compact();
+                        break;
+                    case 'errors':
+                        results = results
+                            .errors(err => action(err));
+                        break;
+                    default:
+                        throw Error(`The activity type '${type}' is not supported.`, 'NOT_SUPPORTED');
+                        break;
+                }
             }
         }
 
