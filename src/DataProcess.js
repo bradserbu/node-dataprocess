@@ -1,6 +1,6 @@
 'use strict';
 
-const DEFAULT_CONCURRENCY = 1;
+const DEFAULT_CONCURRENCY = 0;
 
 // ** Dependencies
 const $ = require('highland');
@@ -28,7 +28,7 @@ function complete(value) {
     }
 
     // Return a promise or wrap a value in a promise
-    return Q.when(value);
+    return Promise.resolve(value);
 }
 
 function pipeline(args) {
@@ -305,7 +305,7 @@ class DataProcess extends EventEmitter {
     delay(ms, options) {
 
         const name = 'delay';
-        const activity = Activity(name, Q.delay);
+        const activity = Activity(name, Promise.delay);
 
         return this.addActivity({
             name: name,

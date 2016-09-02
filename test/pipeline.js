@@ -59,8 +59,7 @@ DataProcess('greet-users')
     .stringify()
     .exec('say-hello', greeting => console.log(greeting))
     .run(USERS, {
-        pipeline: true,
-        concurrency: 4
+        pipeline: true
     })
     .complete();
     // .complete()
