@@ -35,23 +35,12 @@ function pipeline(args) {
     return $.pipeline.apply(null, args);
 }
 
-function isStream(obj) {
-    return obj && util.isFunction(obj.pipe);
-}
-
-/**
- * Function to check if an object is a promise or not
- * @type {boolean}
- */
-function isPromise(obj) {
-    return typeof obj.then == 'function' && typeof obj.catch == 'function';
-}
-
 /**
  * Use the dataprocess as a pipeline running a maximum of N number of activities
  * where N is the max number of concurrent operations across the activities.
  * @param input
  * @param activities
+ * @param concurrency
  */
 function oneAtATime(input, activities, concurrency) {
 
@@ -77,18 +66,8 @@ function oneAtATime(input, activities, concurrency) {
             case 'flatten':
                 process.push($.flatten());
                 break;
-            case 'completed':
-                throw Error('The "completed" activity is not supported for one at a time processing.', 'NOT_SUPPORTED');
-                // results = complete(results)
-                //     .then(() => this); // Return the process as the results of complete
-                break;
             case 'compact':
                 process.push($.compact());
-                break;
-            case 'errors':
-                throw Error('The "errors" activity is not supported for one at a time processing.', 'NOT_SUPPORTED');
-                // results = results
-                //     .errors(err => action(err));
                 break;
             default:
                 throw Error(`The activity type '${type}' is not supported.`, 'NOT_SUPPORTED');
@@ -110,6 +89,76 @@ function oneAtATime(input, activities, concurrency) {
         return input
             .map(record => $([record]).through(pipeline(process)))
             .merge();
+}
+
+function pipelined(input, activities, concurrency) {
+
+    let results = input;
+
+    // *** STREAMING MODE ***
+    // Apply each activity to the results stream as independent steps
+    for (let lcv = 0; lcv < activities.length; lcv++) {
+        const activity = activities[lcv];
+        // Apply the activity to each record
+        const type = activity.type;
+        const action = activity.action;
+        const options = activity.options || {};
+
+        switch (type.toLowerCase()) {
+            case 'map':
+                // Run the activity for each record
+                results = results
+                    .map(record => $(action(record)));
+
+                // Merge the results of the promises together
+                results = (concurrency > 0)
+                    ? results.mergeWithLimit(concurrency)
+                    : results.merge();
+                break;
+            case 'filter':
+                // Run the activity for each of the records
+                results = results
+                    .map(record =>
+                        $(action(record)
+                            .then(result => [record, result]))
+                    );
+
+                // Merge the results of the promises together
+                results = (concurrency > 0)
+                    ? results.mergeWithLimit(concurrency)
+                    : results.merge();
+
+                // Apply the filter and select the record
+                results = results
+                    .filter(t => t[1])
+                    .map(t => t[0]);
+                break;
+            case 'flatten':
+                results = $.flatten(results);
+                break;
+            case 'compact':
+                results = results.compact();
+                break;
+            default:
+                throw Error(`The activity type '${type}' is not supported.`, 'NOT_SUPPORTED');
+                break;
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Format a result stream to a common return type
+ * - Includes a complete() method to turn a stream result into a promise that compeletes when the stream ends.
+ * @param result
+ * @constructor
+ */
+function DataProcessResult(result) {
+
+    result.complete = () => complete(result);
+
+    return result;
 }
 
 /**
@@ -135,86 +184,16 @@ class DataProcess extends EventEmitter {
 
         // Cap the number of instances for all activities
         // Example: concurrency=1 says only 1 instance of an activity at a time.
-        const maxConcurrency = options.concurrency || DEFAULT_CONCURRENCY;
+        const concurrency = options.concurrency || DEFAULT_CONCURRENCY;
 
         // Create a stream that represents the results
-        let results = $.flatten(source);
+        let input = $.flatten(source);
 
-        if (options.pipeline) {
-            // *** Treat the entire Activity ***
-            results = oneAtATime(results, this.activities, maxConcurrency);
-        } else {
-            // *** STREAMING MODE ***
-            // Apply each activity to the results stream as independent steps
-            for (let lcv = 0; lcv < this.activities.length; lcv++) {
-                const activity = this.activities[lcv];
-                // Apply the activity to each record
-                const type = activity.type;
-                const action = activity.action;
-                const options = activity.options || {};
+        const results = options.pipeline
+            ? pipelined(input, this.activities, concurrency)
+            : oneAtATime(input, this.activities, concurrency);
 
-                // options:concurrency - Use activity setting or maxConcurrency, whichever is greater
-                const concurrency = options.concurrency
-                    ? options.concurrency
-                    : maxConcurrency;
-
-                switch (type.toLowerCase()) {
-                    case 'map':
-                        // Run the activity for each record
-                        results = results
-                            .map(record => $(action(record)));
-
-                        // Merge the results of the promises together
-                        results = (concurrency > 0)
-                            ? results.mergeWithLimit(concurrency)
-                            : results.merge();
-                        break;
-                    case 'filter':
-                        // Run the activity for each of the records
-                        results = results
-                            .map(record =>
-                                $(action(record)
-                                    .then(result => [record, result]))
-                            );
-
-                        // Merge the results of the promises together
-                        results = (concurrency > 0)
-                            ? results.mergeWithLimit(concurrency)
-                            : results.merge();
-
-                        // Apply the filter and select the record
-                        results = results
-                            .filter(t => t[1])
-                            .map(t => t[0]);
-                        break;
-                    case 'flatten':
-                        results = $.flatten(results);
-                        break;
-                    case 'completed':
-                        results = complete(results)
-                            .then(() => this); // Return the process as the results of complete
-                        break;
-                    case 'compact':
-                        results = results.compact();
-                        break;
-                    case 'errors':
-                        results = results
-                            .errors(err => action(err));
-                        break;
-                    default:
-                        throw Error(`The activity type '${type}' is not supported.`, 'NOT_SUPPORTED');
-                        break;
-                }
-            }
-        }
-
-        // Return the results stream
-        const ret = results;
-
-        // Transform the stream into a Promise that fullfulls on completion or error.
-        ret.complete = () => complete(results);
-
-        return ret;
+        return DataProcessResult(results);
     }
 
     tap(name, action, options) {
@@ -362,25 +341,6 @@ class DataProcess extends EventEmitter {
             name: 'compact',
             type: 'compact',
             options: options
-        });
-    }
-
-    complete(options) {
-        return this.addActivity({
-            name: 'completed',
-            type: 'completed',
-            options: options
-        });
-    }
-
-    errors(name, action) {
-        const activity = Activity(name, action);
-
-        return this.addActivity({
-            name: name,
-            type: 'errors',
-            action: record => activity.run(record),
-            stats: activity.stats(),
         });
     }
 

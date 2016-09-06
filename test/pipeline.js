@@ -64,7 +64,6 @@ greetUsers
     .run(USERS, {
         pipeline: true
     })
-    .complete();
-
-// .catch(err => console.error(err))
-// .done(process => console.log('PROCESS_COMPLETED', process.stats()));
+    .complete()
+    .catch(err => console.error(err))
+    .done(() => console.log('PROCESS_COMPLETED', greetUsers.stats()));
