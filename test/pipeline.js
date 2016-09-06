@@ -62,7 +62,8 @@ const greetUsers = DataProcess('greet-users')
 // Run the process
 greetUsers
     .run(USERS, {
-        pipeline: true
+        pipeline: true,
+        concurrency: 2
     })
     .complete()
     .catch(err => console.error(err))
