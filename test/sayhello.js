@@ -2,16 +2,21 @@
 'use strict';
 
 // ** Dependencies
-const activities = require('../src/activities');
+const Activity = require('../src/Activity');
+
+let id = 0;
 
 function sayHello(name) {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
 
+    if (id++ % 10 === 0)
+        throw Error('TEST_ERROR');
+
     return greeting;
 }
 
-const say_hello = activities('say-hello', sayHello, {
+const say_hello = Activity('say-hello', sayHello, {
     logArguments: true
 })
     .on('error', (err, args) => console.error('ERROR:', {arguments: args}, err))

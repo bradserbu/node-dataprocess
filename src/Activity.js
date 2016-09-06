@@ -104,7 +104,7 @@ class Activity extends EventEmitter {
 
             // Rethrow this error to propigate it
             self.emit('error', err, args);
-            throw err;
+            // throw err;
         };
 
         /**
