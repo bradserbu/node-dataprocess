@@ -1,9 +1,15 @@
 'use strict';
 
+// ** Constants
+const DEFAULT_OPTIONS = {
+    logArguments: true
+};
+
 // ** Dependencies
 const Promise = require('bluebird');
 const _ = require('underscore');
 const util = require('util');
+const extend = require('extend');
 const debug = require('debug');
 const now = require('microtime').now;
 const measured = require('measured');
@@ -55,7 +61,7 @@ class Activity extends EventEmitter {
         super();
 
         this.name = name;
-        this.options = options;
+        this.options = extend(true, {}, DEFAULT_OPTIONS, options);
 
         this.action = action;
 

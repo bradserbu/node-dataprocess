@@ -284,7 +284,7 @@ class DataProcess extends EventEmitter {
     delay(ms, options) {
 
         const name = 'delay';
-        const activity = Activity(name, Promise.delay);
+        const activity = Activity(name, Promise.delay, options);
 
         return this.addActivity({
             name: name,
