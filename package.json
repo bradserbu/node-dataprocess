@@ -1,6 +1,6 @@
 {
   "name": "dataprocess",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Data processing framework for NodeJS.",
   "main": "index.js",
   "scripts": {},
