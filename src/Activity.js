@@ -2,7 +2,7 @@
 
 // ** Constants
 const DEFAULT_OPTIONS = {
-    logArguments: true
+    logArguments: false
 };
 
 // ** Dependencies

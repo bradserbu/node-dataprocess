@@ -5,7 +5,6 @@
 const Activity = require('../src/Activity');
 
 let id = 0;
-
 function sayHello(name) {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
