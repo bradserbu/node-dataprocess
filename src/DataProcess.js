@@ -17,14 +17,18 @@ const Activity = require('./Activity');
  * @param stream
  * @returns {*}
  */
-function complete(value) {
+function complete(value, errorHandler) {
 
     // Return a promise that completes when the stream completes or produces an error.
     if ($.isStream(value)) {
-        return new Promise((resolve, reject) =>
-            value
-                .stopOnError(err => reject(err))
-                .done(() => resolve()));
+
+        if (errorHandler)
+            value = value.errors((err, push) => errorHandler(err, push));
+
+        return new Promise((resolve, reject) => value
+            .stopOnError(err => reject(err))
+            .done(() => resolve())
+        );
     }
 
     // Return a promise or wrap a value in a promise
@@ -83,8 +87,7 @@ function oneAtATime(input, activities, concurrency) {
 
     if (concurrency)
         return input
-            .map(record => $([record]).through(pipeline(process)))
-            .mergeWithLimit(concurrency);
+            .flatMap(record => $([record]).through(pipeline(process)));
     else
         return input
             .map(record => $([record]).through(pipeline(process)))
@@ -156,7 +159,7 @@ function pipelined(input, activities, concurrency) {
  */
 function DataProcessResult(result) {
 
-    result.complete = () => complete(result);
+    result.complete = (errHandler) => complete(result, errHandler);
 
     return result;
 }
