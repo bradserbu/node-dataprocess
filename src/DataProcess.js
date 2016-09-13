@@ -87,7 +87,8 @@ function oneAtATime(input, activities, concurrency) {
 
     if (concurrency)
         return input
-            .flatMap(record => $([record]).through(pipeline(process)));
+            .map(record => $([record]).through(pipeline(process)))
+            .mergeWithLimit(concurrency);
     else
         return input
             .map(record => $([record]).through(pipeline(process)))
