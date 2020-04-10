@@ -16,7 +16,7 @@
     "extend": "^3.0.0",
     "highland": "^3.0.0-beta.2",
     "measured": "^1.1.0",
-    "microtime": "^2.1.1",
+    "microtime": "^3.0.0",
     "throat": "^3.0.0",
     "underscore": "^1.8.3"
   }
